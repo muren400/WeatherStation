@@ -11,84 +11,107 @@ htmlTableRowFormat = "<tr><td>{}</td><td>{}</td></tr>"
 def getFilePath():
     return os.path.dirname(os.path.realpath(__file__)) + "/data/data" + datetime.today().strftime('_%Y-%m-%d') + ".csv"
 
+def getLogFilePath():
+    return os.path.dirname(os.path.realpath(__file__)) + "/server.log"
+
+def logError(error):
+    try:
+        dataFile = open(getLogFilePath(),'a+')
+        dataFile.write(str(error))
+        dataFile.close()
+    except Exception as error:
+        logError(error)
+
 def queryData():
-    dataFile = open(getFilePath(),'r')
-    data = dataFile.read()
-    dataFile.close()
-    return data
+    try:
+        dataFile = open(getFilePath(),'r')
+        data = dataFile.read()
+        dataFile.close()
+        return data
+    except Exception as error:
+            logError(error)
 
 def queryDataHtml():
     htmlData = "<style>table, th, td {border: 1px solid black;}</style><table><tr><th>date and time</th><th>temperature</th>"
+    try:
+        dataFile = open(getFilePath(),'r')
+        for line in dataFile:
+            print(line)
+            cols = line.split(",")
 
-    dataFile = open(getFilePath(),'r')
-    for line in dataFile:
-        print(line)
-        cols = line.split(",")
+            try:
+                dateAsString = datetime.fromtimestamp(int(cols[0]))
+                htmlData += htmlTableRowFormat.format(dateAsString, cols[1])
+            except ValueError as e:
+                print(e)
 
-        try:
-            dateAsString = datetime.fromtimestamp(int(cols[0]))
-            htmlData += htmlTableRowFormat.format(dateAsString, cols[1])
-        except ValueError as e:
-            print(e)
+        htmlData += "</table>"
 
-    htmlData += "</table>"
+    except Exception as error:
+            logError(error)
 
     return htmlData
 
 def queryDataHtmlPlotted():
-    htmlData = '''<!DOCTYPE html>
-    <html>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
-    <body>
-    <canvas id="myChart" style="width:100%;"></canvas>
-    <script>'''
+    try:
+        htmlData = '''<!DOCTYPE html>
+        <html>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+        <body>
+        <canvas id="myChart" style="width:100%;"></canvas>
+        <script>'''
 
-    dateValues = []
-    temperatureValues = []
+        dateValues = []
+        temperatureValues = []
 
-    dataFile = open(getFilePath(),'r')
-    for line in dataFile:
-        print(line)
-        cols = line.split(",")
+        dataFile = open(getFilePath(),'r')
+        for line in dataFile:
+            print(line)
+            cols = line.split(",")
 
-        try:
-            dateValues.append(str(datetime.fromtimestamp(int(cols[0]))))
-            temperatureValues.append(float(cols[1]))
-        except ValueError as e:
-            print(e)
+            try:
+                dateValues.append(str(datetime.fromtimestamp(int(cols[0]))))
+                temperatureValues.append(float(cols[1]))
+            except ValueError as e:
+                print(e)
 
-    htmlData += 'const xValues = ' + str(dateValues) + ';'
-    htmlData += 'const yValues = ' + str(temperatureValues) + ';'
+        htmlData += 'const xValues = ' + str(dateValues) + ';'
+        htmlData += 'const yValues = ' + str(temperatureValues) + ';'
 
-    htmlData += '''new Chart("myChart", {
-        type: "line",
-        data: {
-            labels: xValues,
-            datasets: [{
-                fill: false,
-                borderColor: "rgba(0,0,255)",
-                data: yValues
-            }]
-        },
-        options: {
-            legend: {display: false},
-            scales: {
-                yAxes: [{ticks: {min: ''' + str(min(temperatureValues) - 1) + ',  max:' + str(max(temperatureValues) + 1) + '''}}],
+        htmlData += '''new Chart("myChart", {
+            type: "line",
+            data: {
+                labels: xValues,
+                datasets: [{
+                    fill: false,
+                    borderColor: "rgba(0,0,255)",
+                    data: yValues
+                }]
+            },
+            options: {
+                legend: {display: false},
+                scales: {
+                    yAxes: [{ticks: {min: ''' + str(min(temperatureValues) - 1) + ',  max:' + str(max(temperatureValues) + 1) + '''}}],
+                }
             }
-        }
-    });
-    </script>
-    </body>
-    </html>'''
+        });
+        </script>
+        </body>
+        </html>'''
 
-    return htmlData
+        return htmlData
+    except Exception as error:
+            logError(error)
 
 def logTemperature(temperature):
-    dataFile = open(getFilePath(),'a+')
-    timestamp = int(datetime.now().timestamp())
-    dataFile.write(csvFormat.format(timestamp, temperature))
-    dataFile.close()
-    print("Temperature %s" % temperature)
+    try:
+        dataFile = open(getFilePath(),'a+')
+        timestamp = int(datetime.now().timestamp())
+        dataFile.write(csvFormat.format(timestamp, temperature))
+        dataFile.close()
+        print("Temperature %s" % temperature)
+    except Exception as error:
+            logError(error)
 
 class MyServer(BaseHTTPRequestHandler):
     def do_GET(request):
@@ -114,18 +137,18 @@ class MyServer(BaseHTTPRequestHandler):
                 request.wfile.write(bytes("<p>Temperature: %s</p>" % temperature, "utf-8"))
 
                 logTemperature(temperature)
-        except KeyError:
-            pass
+        except Exception as error:
+            logError(error)
 
 
 if __name__ == "__main__":
     webServer = HTTPServer(('', serverPort), MyServer)
     print("Server started http://%s:%s" % (hostName, serverPort))
 
-    # try:
-    webServer.serve_forever()
-    # except KeyboardInterrupt:
-    #     pass
+    try:
+        webServer.serve_forever()
+    except KeyboardInterrupt:
+         pass
 
     webServer.server_close()
     print("Server stopped.")
