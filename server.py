@@ -9,7 +9,7 @@ csvFormat = "{}, {}\n"
 htmlTableRowFormat = "<tr><td>{}</td><td>{}</td></tr>"
 
 def getFilePath():
-    return os.path.dirname(os.path.realpath(__file__)) + "/data/data" + datetime.today().strftime('_%Y-%m-%d') + ".py"
+    return os.path.dirname(os.path.realpath(__file__)) + "/data/data" + datetime.today().strftime('_%Y-%m-%d') + ".csv"
 
 def queryData():
     dataFile = open(getFilePath(),'r')
