@@ -17,10 +17,11 @@ def getLogFilePath():
 def logError(error):
     try:
         dataFile = open(getLogFilePath(),'a+')
-        dataFile.write(str(error))
+        dataFile.write(repr(error))
+        dataFile.write("\n")
         dataFile.close()
-    except Exception as error:
-        logError(error)
+    except Exception as e:
+        print(str(e.type))
 
 def queryData():
     try:
@@ -130,13 +131,15 @@ class MyServer(BaseHTTPRequestHandler):
                 request.wfile.write(bytes(queryDataHtml(), "utf-8"))
             elif parsedPath.path == "/queryHtmlPlotted":
                 request.wfile.write(bytes(queryDataHtmlPlotted(), "utf-8"))
-            else:
+            elif "?temp=" in request.path:
                 query_components = parse_qs(parsedPath.query)
                 temperature = query_components["temp"][0]
 
                 request.wfile.write(bytes("<p>Temperature: %s</p>" % temperature, "utf-8"))
 
                 logTemperature(temperature)
+            else:
+                request.wfile.write(bytes("<p>So nicht!</p>", "utf-8"))
         except Exception as error:
             logError(error)
 
