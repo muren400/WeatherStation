@@ -8,99 +8,45 @@ serverPort = 13337
 csvFormat = "{}, {}\n"
 htmlTableRowFormat = "<tr><td>{}</td><td>{}</td></tr>"
 
+def getHomePath():
+    return os.path.dirname(os.path.realpath(__file__))
+
 def getFilePath():
-    return os.path.dirname(os.path.realpath(__file__)) + "/data/data" + datetime.today().strftime('_%Y-%m-%d') + ".csv"
+    return getHomePath() + "/data/data" + datetime.today().strftime('_%Y-%m-%d') + ".csv"
 
 def getLogFilePath():
-    return os.path.dirname(os.path.realpath(__file__)) + "/server.log"
+    return getHomePath() + "/server.log"
 
 def logError(error):
     try:
+        errorString = repr(error)
+        print(errorString)
+
         dataFile = open(getLogFilePath(),'a+')
-        dataFile.write(repr(error))
+        dataFile.write(errorString)
         dataFile.write("\n")
         dataFile.close()
     except Exception as e:
         print(str(e.type))
 
+def getFileContent(path):
+    try:
+        fileObject = open(path,'r')
+        content = fileObject.read()
+        fileObject.close()
+        return content
+    except Exception as error:
+            logError(error)
+
+def getIndexHtml():
+    try:
+        return getFileContent(getHomePath() + "/gui/index.html")
+    except Exception as error:
+            logError(error)
+
 def queryData():
     try:
-        dataFile = open(getFilePath(),'r')
-        data = dataFile.read()
-        dataFile.close()
-        return data
-    except Exception as error:
-            logError(error)
-
-def queryDataHtml():
-    htmlData = "<style>table, th, td {border: 1px solid black;}</style><table><tr><th>date and time</th><th>temperature</th>"
-    try:
-        dataFile = open(getFilePath(),'r')
-        for line in dataFile:
-            print(line)
-            cols = line.split(",")
-
-            try:
-                dateAsString = datetime.fromtimestamp(int(cols[0]))
-                htmlData += htmlTableRowFormat.format(dateAsString, cols[1])
-            except ValueError as e:
-                print(e)
-
-        htmlData += "</table>"
-
-    except Exception as error:
-            logError(error)
-
-    return htmlData
-
-def queryDataHtmlPlotted():
-    try:
-        htmlData = '''<!DOCTYPE html>
-        <html>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
-        <body>
-        <canvas id="myChart" style="width:100%;"></canvas>
-        <script>'''
-
-        dateValues = []
-        temperatureValues = []
-
-        dataFile = open(getFilePath(),'r')
-        for line in dataFile:
-            print(line)
-            cols = line.split(",")
-
-            try:
-                dateValues.append(str(datetime.fromtimestamp(int(cols[0]))))
-                temperatureValues.append(float(cols[1]))
-            except ValueError as e:
-                print(e)
-
-        htmlData += 'const xValues = ' + str(dateValues) + ';'
-        htmlData += 'const yValues = ' + str(temperatureValues) + ';'
-
-        htmlData += '''new Chart("myChart", {
-            type: "line",
-            data: {
-                labels: xValues,
-                datasets: [{
-                    fill: false,
-                    borderColor: "rgba(0,0,255)",
-                    data: yValues
-                }]
-            },
-            options: {
-                legend: {display: false},
-                scales: {
-                    yAxes: [{ticks: {min: ''' + str(min(temperatureValues) - 1) + ',  max:' + str(max(temperatureValues) + 1) + '''}}],
-                }
-            }
-        });
-        </script>
-        </body>
-        </html>'''
-
-        return htmlData
+        return getFileContent(getFilePath())
     except Exception as error:
             logError(error)
 
@@ -125,13 +71,11 @@ class MyServer(BaseHTTPRequestHandler):
 
             print("Path %s" % request.path)
 
-            if parsedPath.path == "/query":
+            if parsedPath.path == "/":
+                request.wfile.write(bytes(getIndexHtml(), "utf-8"))
+            elif parsedPath.path == "/query":
                 request.wfile.write(bytes(queryData(), "utf-8"))
-            elif parsedPath.path == "/queryHtml":
-                request.wfile.write(bytes(queryDataHtml(), "utf-8"))
-            elif parsedPath.path == "/queryHtmlPlotted":
-                request.wfile.write(bytes(queryDataHtmlPlotted(), "utf-8"))
-            elif "?temp=" in request.path:
+            elif "/putTemperature?temp=" in request.path:
                 query_components = parse_qs(parsedPath.query)
                 temperature = query_components["temp"][0]
 
