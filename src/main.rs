@@ -8,6 +8,13 @@ use std::net::SocketAddr;
 use std::error::Error;
 use std::env;
 
+use log4rs;
+
+use log::debug;
+use log::error;
+use log::info;
+use log::warn;
+
 use std::collections::HashMap;
 
 use url::form_urlencoded;
@@ -34,8 +41,17 @@ fn getTodaysDataPath() -> String {
 fn getFileContent(filePath: &str) -> String {
     let path = getFullPath(filePath).expect("");
 
-    println!("get file {:?}", path.display());
-    return fs::read_to_string(path).expect("404");
+    debug!("get file {:?}", path.display());
+
+    let result = fs::read_to_string(path);
+
+    return match result {
+        Ok(res) => res,
+        Err(e) => {
+            error!("Couldn't read from file: {}", e);
+            return "404".to_string();
+        }
+    }
 }
 
 fn storeTemperature(temp: f32) {
@@ -45,11 +61,11 @@ fn storeTemperature(temp: f32) {
     let line = format!("{}, {}\n", timestamp, temp);
     let filePath = getFullPath(&getTodaysDataPath()).expect("");
 
-    println!("write to file {} {}", filePath.display(), line);
+    debug!("write to file {} {}", filePath.display(), line);
 
     let mut file = OpenOptions::new().create(true).append(true).open(filePath).unwrap();
     if let Err(e) = writeln!(file, "{}", line) {
-        eprintln!("Couldn't write to file: {}", e);
+        error!("Couldn't write to file: {}", e);
     }
 }
 
@@ -113,7 +129,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let server = Server::bind(&addr).serve(service);
 
-    println!("Listening on http://{}", addr);
+    log4rs::init_file("config/log4rs.yaml", Default::default()).unwrap();
+    info!("Listening on http://{}", addr);
 
     server.await?;
 

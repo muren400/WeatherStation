@@ -1,0 +1,8 @@
+2022-12-11 16:33:55 - INFO: Listening on http://127.0.0.1:13337
+2022-12-11 16:34:02 - TRACE: registering event source with poller: token=Token(1), interests=READABLE | WRITABLE
+2022-12-11 16:34:02 - DEBUG: get file "\\\\?\\C:\\Users\\erzae\\Nextcloud\\rust\\wetterstation\\wetterstation\\target\\debug\\data\\data_2022-12-11.csv"
+2022-12-11 16:34:03 - DEBUG: get file "\\\\?\\C:\\Users\\erzae\\Nextcloud\\rust\\wetterstation\\wetterstation\\target\\debug\\gui\\index.html"
+2022-12-11 16:34:04 - DEBUG: get file "\\\\?\\C:\\Users\\erzae\\Nextcloud\\rust\\wetterstation\\wetterstation\\target\\debug\\data\\data_2022-12-11.csv"
+2022-12-11 16:34:09 - DEBUG: get file "\\\\?\\C:\\Users\\erzae\\Nextcloud\\rust\\wetterstation\\wetterstation\\target\\debug\\data\\data_2022-12-11.csv"
+2022-12-11 16:34:14 - DEBUG: get file "\\\\?\\C:\\Users\\erzae\\Nextcloud\\rust\\wetterstation\\wetterstation\\target\\debug\\data\\data_2022-12-11.csv"
+2022-12-11 16:34:19 - DEBUG: get file "\\\\?\\C:\\Users\\erzae\\Nextcloud\\rust\\wetterstation\\wetterstation\\target\\debug\\data\\data_2022-12-11.csv"

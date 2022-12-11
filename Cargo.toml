@@ -10,7 +10,8 @@ hyper = { version = "0.14.x", features = ["full"] }
 tokio = { version = "1", features = ["full"] }
 chrono = "0.4.23"
 futures = "0.3"
-pretty_env_logger = "0.4"
+log = "0.4"
+log4rs = "1.2.0"
 
 [dependencies.url]
 git = "https://github.com/servo/rust-url"
