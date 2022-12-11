@@ -1,9 +1,12 @@
 use std::fs;
 use std::fs::OpenOptions;
+use std::io;
+use std::path::PathBuf;
 use std::io::Write;
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::net::SocketAddr;
 use std::error::Error;
+use std::env;
 
 use std::collections::HashMap;
 
@@ -16,14 +19,23 @@ use futures::stream::TryStreamExt;
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Method, Request, Response, Server, StatusCode};
 
+fn getFullPath(filePath: &str) -> io::Result<PathBuf> {
+    let mut path = env::current_exe()?;
+    path.pop();
+    path.push(filePath);
+    Ok(path)
+}
+
 fn getTodaysDataPath() -> String {
     let now = Utc::now();
     return format!("data/data_{}-{:02}-{:02}.csv", now.year(),  now.month(), now.day());
 }
 
 fn getFileContent(filePath: &str) -> String {
-    println!("get file {}", filePath);
-    return fs::read_to_string(filePath.to_string()).expect("404");
+    let path = getFullPath(filePath).expect("");
+
+    println!("get file {:?}", path.display());
+    return fs::read_to_string(path).expect("404");
 }
 
 fn storeTemperature(temp: f32) {
@@ -31,9 +43,9 @@ fn storeTemperature(temp: f32) {
     let timestamp = now.timestamp_millis()/1000;
 
     let line = format!("{}, {}\n", timestamp, temp);
-    let filePath = getTodaysDataPath();
+    let filePath = getFullPath(&getTodaysDataPath()).expect("");
 
-    println!("write to file {} {}", filePath, line);
+    println!("write to file {} {}", filePath.display(), line);
 
     let mut file = OpenOptions::new().create(true).append(true).open(filePath).unwrap();
     if let Err(e) = writeln!(file, "{}", line) {
