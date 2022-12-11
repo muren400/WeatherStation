@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+  <body>
+    <canvas id="myChart" style="width: 100%;"></canvas>
+
+    <script>
+      let oldDataHash = 0;
+
+      String.prototype.hashCode = function () {
+        let hash = 0;
+
+        if (this.length === 0) {
+          return hash;
+        }
+
+        for (let i = 0; i < this.length; i++) {
+          const chr = this.charCodeAt(i);
+          hash = (hash << 5) - hash + chr;
+          hash |= 0; // Convert to 32bit integer
+        }
+
+        return hash;
+      };
+
+      function queryData() {
+        const xmlHttp = new XMLHttpRequest();
+        xmlHttp.open("GET", "../query", false);
+        xmlHttp.send(null);
+
+        const dataString = xmlHttp.responseText;
+        if (dataString == null) {
+          return;
+        }
+
+        const dataLines = dataString.split("\n");
+
+        const data = {
+          times: [],
+          temperatures: [],
+        };
+
+        for (let line of dataLines) {
+          if (line.trim().length === 0) {
+            continue;
+          }
+
+          const splitLine = line.split(",");
+
+          const date = new Date(parseInt(splitLine[0]) * 1000);
+          const temperature = parseFloat(splitLine[1]);
+
+          if(temperature < -30) {
+            continue;
+          }
+
+          data.times.push(date.toLocaleString());
+          data.temperatures.push(temperature);
+        }
+
+        return data;
+      }
+
+      function buildChart() {
+        const data = queryData();
+        if (data == null) {
+          return;
+        }
+
+        const dataHash = JSON.stringify(data).hashCode();
+        if (oldDataHash === dataHash) {
+          return;
+        }
+
+        oldDataHash = dataHash;
+
+        new Chart("myChart", {
+          type: "line",
+          data: {
+            labels: data.times,
+            datasets: [
+              {
+                data: data.temperatures,
+                borderColor: "red",
+                fill: false,
+              },
+            ],
+          },
+          options: {
+            legend: { display: false },
+            scales: {
+              yAxes: [{ ticks: { min: Math.min(...data.temperatures) - 1, max: Math.max(...data.temperatures) + 1} }],
+            },
+          },
+        });
+      }
+
+      setInterval(() => {
+        buildChart();
+      }, 5000);
+
+      buildChart();
+    </script>
+  </body>
+</html>
